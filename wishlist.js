@@ -68,5 +68,5 @@ function removeFromWishlist(bookId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  displayWishlist(); // Initial load with spinner
+  displayWishlist(); 
 });

@@ -12,9 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Fetch books from the API
 function fetchBooks(page = 1) {
-    // Show the loading spinner
     document.getElementById("loading-spinner").classList.remove("hidden");
-  
     fetch(`https://gutendex.com/books?page=${page}`)
       .then((response) => response.json())
       .then((data) => {
@@ -27,7 +25,6 @@ function fetchBooks(page = 1) {
       })
       .catch((error) => console.error("Error fetching books:", error))
       .finally(() => {
-        // Hide the loading spinner once the books are loaded
         document.getElementById("loading-spinner").classList.add("hidden");
       });
   }
@@ -36,13 +33,12 @@ function fetchBooks(page = 1) {
 // Display books on the page
 function displayBooks(books) {
   const bookContainer = document.getElementById("book-list");
-  bookContainer.innerHTML = ""; // Clear previous books
+  bookContainer.innerHTML = ""; 
 
   const startIndex = (currentPage - 1) * booksPerPage;
   const endIndex = startIndex + booksPerPage;
 
   const paginatedBooks = books.slice(startIndex, endIndex);
-  // Check if there are no books to display after filtering
   if (paginatedBooks.length === 0) {
     bookContainer.innerHTML = `
       <div class="col-span-full text-center text-gray-500">
