@@ -85,7 +85,7 @@ function displayBooks(books) {
 // Create pagination
 function createPagination(totalPages, currentPage) {
   const paginationContainer = document.getElementById("pagination");
-  paginationContainer.innerHTML = ""; // Clear previous pagination
+  paginationContainer.innerHTML = "";
 
   // Create previous button
   const prevButton = document.createElement("button");
@@ -160,7 +160,7 @@ function filterByGenre() {
     : allBooks;
   currentPage = 1;
   displayBooks(filteredBooks);
-  createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage); // Refresh pagination
+  createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage);
 }
 
 // Show toast notification
