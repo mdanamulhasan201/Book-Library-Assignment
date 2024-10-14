@@ -33,7 +33,7 @@ function displayWishlist(showSpinner = true) {
           }</td>
           <td class="px-4 py-2 text-center">
             <div class="flex flex-col items-center space-y-1"> 
-              <a href="book.html?id=${
+              <a href="book-details.html?id=${
                 book.id
               }" class="text-blue-500 hover:underline">View Details</a>
               <button class="text-red-500 hover:underline" onclick="removeFromWishlist(${
