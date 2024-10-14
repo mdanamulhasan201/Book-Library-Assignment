@@ -1,11 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishlist</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+
+<body class="bg-gray-100">
+  <!-- Loading spinner -->
+  <div id="loading-spinner" class="hidden fixed inset-0 bg-gray-100 flex items-center justify-center">
+    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+  </div>
+
+  <!-- Navbar container -->
+  <div id="navbar-container"></div>
+
+  <!-- Wishlist data display -->
+  <div class="container mx-auto p-6">
+    <h1 class="text-center text-2xl font-bold mb-5">My Wishlist</h1>
+    <div class="overflow-x-auto">
+      <table class="min-w-full table-auto border-collapse bg-white">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2">Index</th>
+            <th class="px-4 py-2">Image</th>
+            <th class="px-4 py-2">ID</th>
+            <th class="px-4 py-2">Title</th>
+            <th class="px-4 py-2">Author</th>
+            <th class="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wishlist-container" class="border border-gray-200">
+          <!-- Wishlist items will be injected here -->
+        </tbody>
+      </table>
+    </div>
     
+  </div>
+  
+
+  <!-- Scripts -->
+  <script src="navbar-loader.js"></script>
+  <script src="wishlist.js"></script>
 </body>
+
 </html>
