@@ -10,7 +10,7 @@ let searchTimeout;
 // On DOM load, fetch the books
 document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const page = parseInt(urlParams.get('page')) || 1; // Default to page 1 if no page query exists
+  const page = parseInt(urlParams.get('page')) || 1; 
   currentPage = page;
 
   fetchAllBooks();
@@ -55,21 +55,33 @@ function displayBooks(books) {
     bookContainer.innerHTML = `<div class="col-span-full text-center text-gray-500">No books found</div>`;
     return;
   }
-
-  // Display books
   paginatedBooks.forEach((book) => {
     const bookItem = document.createElement("div");
     bookItem.classList.add("book-item");
     const isWishlisted = wishlist.some((b) => b.id === book.id);
 
-    let genre = book.subjects && book.subjects.length > 0 ? book.subjects[0] :
-                book.bookshelves && book.bookshelves.length > 0 ? book.bookshelves[0] : "Unknown";
+   
+    // Extract genre from subjects or bookshelves
+    let genre = "Unknown"; 
+    if (book.subjects && book.subjects.length > 0) {
+      genre = book.subjects[0]; 
+    } else if (book.bookshelves && book.bookshelves.length > 0) {
+      genre = book.bookshelves[0]; 
+    }
+
+    // Extract and truncate title
+    const fullTitle = book.title;
+    const truncatedTitle = fullTitle.length > 80 ? `${fullTitle.substring(0, 80)}...` : fullTitle;
 
     bookItem.innerHTML = `
       <img src="${book.formats["image/jpeg"] || "default_cover.jpg"}" alt="${book.title}" class="book-cover mb-4"/>
-      <h3 class="text-md text-center font-bold mb-1 mt-2">${book.title}</h3>
+      <h3 class="text-md text-center font-bold mb-1 mt-2">
+        <span class="full-title hidden">${fullTitle}</span>
+        <span class="truncated-title">${truncatedTitle}</span>
+        ${fullTitle.length > 100 ? `<button class="text-blue-500 underline read-more" onclick="toggleTitle(this)">Read More</button>` : ''}
+      </h3>
       <p class="text-gray-600 text-center mb-1">Author: ${book.authors.length ? book.authors[0].name : "Unknown"}</p>
-      <p class="text-gray-600 text-center mb-1">Genre: ${genre}</p>
+     <p class="text-gray-600 text-center mb-1">Genre: ${genre}</p>
       <div class="flex justify-between mt-4">
         <p class="text-gray-600 book-card-id">ID: ${book.id}</p>
         <button class="wishlist-btn ${isWishlisted ? "active" : ""}" data-id="${book.id}" onclick="toggleWishlist(${book.id})">
@@ -81,6 +93,24 @@ function displayBooks(books) {
     bookContainer.appendChild(bookItem);
   });
 }
+
+// Toggle full title visibility
+function toggleTitle(button) {
+  const fullTitleSpan = button.previousElementSibling; 
+  const truncatedTitleSpan = fullTitleSpan.previousElementSibling; 
+
+  // Toggle visibility
+  if (fullTitleSpan.classList.contains("hidden")) {
+    fullTitleSpan.classList.remove("hidden");
+    truncatedTitleSpan.classList.add("hidden");
+    button.textContent = "Read More"; 
+  } else {
+    fullTitleSpan.classList.add("hidden");
+    truncatedTitleSpan.classList.remove("hidden");
+    button.textContent = "Read Less"; 
+  }
+}
+
 
 // Real-time search for books by title
 function filterBooks() {
@@ -138,7 +168,7 @@ function searchBooks() {
         createPagination(Math.ceil(totalBooks / booksPerPage), currentPage);
       })
       .catch(error => console.error("Error fetching search results:", error));
-  }, 300); 
+  }, 300); // Debounce time in milliseconds
 }
 
 // On DOM load, fetch the books and handle any search parameters in the URL
@@ -170,7 +200,6 @@ function populateGenres() {
     }
   });
 
-  // Add genres to the dropdown
   genres.forEach((genre) => {
     const option = document.createElement("option");
     option.value = genre;
@@ -188,6 +217,7 @@ function filterByGenre() {
         (book.bookshelves && book.bookshelves.includes(selectedGenre))
       )
     : allBooks;
+
   currentPage = 1;
   displayBooks(filteredBooks);
   createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage);
@@ -198,14 +228,12 @@ function createPagination(totalPages, currentPage) {
   const paginationContainer = document.getElementById("pagination");
   paginationContainer.innerHTML = "";
 
-  // Previous button
   const prevButton = document.createElement("button");
   prevButton.innerHTML = "Previous";
   prevButton.disabled = currentPage === 1;
   prevButton.addEventListener("click", () => goToPage(currentPage - 1));
   paginationContainer.appendChild(prevButton);
 
-  // Display page numbers
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       const pageButton = document.createElement("button");
@@ -223,7 +251,6 @@ function createPagination(totalPages, currentPage) {
     }
   }
 
-  // Next button
   const nextButton = document.createElement("button");
   nextButton.innerHTML = "Next";
   nextButton.disabled = currentPage === totalPages;
@@ -235,9 +262,11 @@ function createPagination(totalPages, currentPage) {
 function goToPage(page) {
   if (page < 1 || page > Math.ceil(totalBooks / booksPerPage)) return;
   currentPage = page;
+
   const url = new URL(window.location);
   url.searchParams.set('page', currentPage);
   window.history.pushState({}, '', url); 
+
   fetchAllBooks();
 }
 
@@ -256,7 +285,7 @@ function toggleWishlist(bookId) {
   }
   
   localStorage.setItem("wishlist", JSON.stringify(wishlist));
-  displayBooks(filteredBooks); 
+  displayBooks(filteredBooks); // Refresh the books display
 }
 
 // Toast notifications for wishlist updates
