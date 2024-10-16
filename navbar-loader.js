@@ -10,6 +10,5 @@ function loadNavbar() {
       });
   }
   
-  // Call the function when the DOM is fully loaded
   document.addEventListener("DOMContentLoaded", loadNavbar);
   

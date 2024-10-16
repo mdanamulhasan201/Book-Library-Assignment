@@ -15,7 +15,7 @@
     <div id="loading-spinner" class="hidden z-50 fixed inset-0 bg-gray-100 flex items-center justify-center">
         <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
     </div>
-   
+
     <div id="navbar-container"></div>
     <!-- Main Section -->
     <div class="container mx-auto p-6">
@@ -25,15 +25,17 @@
             <div class="relative w-full md:w-6/12">
                 <input id="search-bar" type="text" placeholder="Search books..."
                     class="w-full p-2 border border-gray-300 rounded pr-10" oninput="filterBooks()">
-                <button id="clear-button" class="absolute right-2 top-1/2 transform -translate-y-1/2" onclick="clearSearch()">
+                <button id="clear-button" class="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    onclick="clearSearch()">
                     <i class="fas fa-times text-gray-400"></i>
                 </button>
             </div>
-            <select id="genre-filter" class="p-2 border border-gray-300 rounded w-full md:w-6/12 max-w-full" onchange="filterByGenre()">
+            <select id="genre-filter" class="p-2 border border-gray-300 rounded w-full md:w-6/12 max-w-full"
+                onchange="filterByGenre()">
                 <option value="">All Genres</option>
             </select>
         </div>
-        
+
 
         <!-- Book List -->
         <div id="book-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
@@ -45,7 +47,7 @@
 
     </div>
     <script src="navbar-loader.js"></script>
-    <script src="app.js" defer></script> 
+    <script src="app.js" defer></script>
 </body>
 
 </html>

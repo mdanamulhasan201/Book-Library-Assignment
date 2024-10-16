@@ -96,18 +96,18 @@
   cursor: not-allowed;
 }
 
-/* use remove wishlist animation */
+
 /* Fade-out animation */
 .fade-out {
   opacity: 0;
   transition: opacity 0.5s ease;
 }
 
-/* Ensure that the row has full opacity initially */
+
 tr {
   opacity: 1;
 }
-/* Optional Custom Styles */
+
 .transition-all {
-  transition: all 0.3s ease-in-out; /* Customize the transition timing */
+  transition: all 0.3s ease-in-out;
 }

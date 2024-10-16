@@ -8,7 +8,6 @@ function displayWishlist(showSpinner = true) {
   }
 
   wishlistContainer.innerHTML = "";
-
   setTimeout(() => {
     if (wishlist.length === 0) {
       wishlistContainer.innerHTML =
@@ -68,5 +67,5 @@ function removeFromWishlist(bookId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  displayWishlist(); // Initial load with spinner
+  displayWishlist(); 
 });

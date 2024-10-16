@@ -29,7 +29,6 @@ function fetchBookDetails(bookId) {
 
 function displayBookDetails(book) {
   const bookDetailsContainer = document.getElementById("book-details");
-
   let genre = "Unknown";
   if (book.subjects && book.subjects.length > 0) {
     genre = book.subjects[0]; 
@@ -40,19 +39,17 @@ function displayBookDetails(book) {
   // Create HTML content for book details
   bookDetailsContainer.innerHTML = `
     <img src="${book.formats["image/jpeg"] || "default_cover.jpg"}" alt="${book.title}" class="w-96 mx-auto mb-4"/>
-<h1 class="text-lg text-center font-bold mb-2">${book.title}</h1>
-<p class="text-gray-600 text-center mb-2">Author: ${book.authors.length ? book.authors[0].name : "Unknown"}</p>
-<p class="text-gray-600 text-center mb-2">Genre: ${genre}</p>
-<p class="text-gray-600 text-center mb-2">ID: ${book.id}</p>
-<p class="text-gray-600 text-center mb-2">Download Links:</p>
-<ul class="flex flex-col items-center justify-center mb-4">
-  ${Object.keys(book.formats).map(format => `<li class="mb-1"><a href="${book.formats[format]}" target="_blank" class="text-blue-500 hover:underline">${format}</a></li>`).join('')}
-</ul>
-<<a href="wishlist.html" class="btn-back flex justify-center items-center bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 mt-4 w-48 mx-auto">
-  Back to Wishlist
-</a>
-
-
+      <h1 class="text-lg text-center font-bold mb-2">${book.title}</h1>
+      <p class="text-gray-600 text-center mb-2">Author: ${book.authors.length ? book.authors[0].name : "Unknown"}</p>
+      <p class="text-gray-600 text-center mb-2">Genre: ${genre}</p>
+      <p class="text-gray-600 text-center mb-2">ID: ${book.id}</p>
+      <p class="text-gray-600 text-center mb-2">Download Links:</p>
+    <ul class="flex flex-col items-center justify-center mb-4">
+        ${Object.keys(book.formats).map(format => `<li class="mb-1"><a href="${book.formats[format]}" target="_blank" class="text-blue-500 hover:underline">${format}</a></li>`).join('')}
+    </ul>
+      <a href="wishlist.html" class="btn-back flex justify-center items-center bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg      hover:bg-blue-600 transition duration-300 mt-4 w-48 mx-auto">
+          Back to Wishlist
+      </a>
 
   `;
 }
