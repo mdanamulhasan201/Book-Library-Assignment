@@ -2,7 +2,7 @@ let allBooks = [];
 let filteredBooks = [];
 let currentPage = 1;
 let totalBooks = 0;
-let totalPages = 0; 
+let totalPages = 0;  
 let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 let searchTimeout;
 
@@ -30,8 +30,10 @@ function fetchBooksByPage(page = 1) {
       })
       .then(data => {
         allBooks = data.results;  
-        totalBooks = data.count; 
+        totalBooks = data.count;  
         totalPages = Math.ceil(totalBooks / data.results.length);  
+
+        // Apply genre filtering, if any
         const selectedGenre = document.getElementById("genre-filter").value;
         if (selectedGenre) {
           filteredBooks = allBooks.filter(book => 
@@ -44,7 +46,7 @@ function fetchBooksByPage(page = 1) {
 
         displayBooks(filteredBooks);  
         createPagination(totalPages, currentPage); 
-        populateGenres();
+        populateGenres(); 
         resolve();
       })
       .catch(error => {
@@ -127,6 +129,7 @@ function toggleTitle(button) {
 // Real-time search for books by title
 function filterBooks() {
   const searchQuery = document.getElementById("search-bar").value.trim().toLowerCase();
+  
   // Update the URL with the search query
   const url = new URL(window.location);
   if (searchQuery) {
@@ -135,32 +138,36 @@ function filterBooks() {
     url.searchParams.delete('search'); 
   }
   window.history.pushState({}, '', url); 
+
   if (searchQuery === "") {
     filteredBooks = allBooks; 
   } else {
     searchBooks(searchQuery); 
     return; 
   }
+
   currentPage = 1; 
   displayBooks(filteredBooks);
   createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage);
 }
 
 
-// book search function
+// searchBooks function
 function searchBooks() {
   const searchQuery = document.getElementById("search-bar").value.trim();
   if (searchTimeout) clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     document.getElementById("loading-spinner").classList.remove("hidden");
     if (searchQuery.length < 3) {
-      filteredBooks = allBooks; 
+      filteredBooks = allBooks;
       currentPage = 1; 
       displayBooks(filteredBooks);
-      createPagination(totalPages, currentPage);
+      createPagination(totalPages, currentPage);  
       document.getElementById("loading-spinner").classList.add("hidden"); 
       return; 
     }
+
+    // Perform the search
     fetch(`https://gutendex.com/books?search=${encodeURIComponent(searchQuery)}`)
       .then(response => {
         if (!response.ok) {
@@ -168,7 +175,7 @@ function searchBooks() {
         }
         return response.json();
       })
-      .then(data => {y
+      .then(data => {
         if (data.results.length === 0) {
           filteredBooks = []; 
           alert("No books found for the given search term.");
@@ -178,6 +185,7 @@ function searchBooks() {
           totalPages = Math.ceil(totalBooks / data.results.length); 
         }
         currentPage = 1; 
+
         displayBooks(filteredBooks);
         createPagination(totalPages, currentPage); 
       })
@@ -188,7 +196,7 @@ function searchBooks() {
       .finally(() => {
         document.getElementById("loading-spinner").classList.add("hidden");
       });
-  }, 500); 
+  }, 500);
 }
 
 
@@ -207,13 +215,12 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchBooksByPage(currentPage); 
   }
 });
-// Clear the search input and refresh the book list
 function clearSearch() {
   document.getElementById("search-bar").value = ""; 
   document.getElementById("loading-spinner").classList.remove("hidden");
   fetchBooksByPage(1) 
     .then(() => {
-      filteredBooks = allBooks;
+      filteredBooks = allBooks; 
       currentPage = 1; 
       displayBooks(filteredBooks);
 
@@ -230,16 +237,22 @@ function clearSearch() {
   window.history.pushState({}, '', url); 
 }
 
+
+
 // Populate genres in the dropdown dynamically
 function populateGenres() {
   const genreFilter = document.getElementById("genre-filter");
   genreFilter.innerHTML = ""; 
+
+  // Add "All Genres" option
   const allGenresOption = document.createElement("option");
   allGenresOption.value = ""; 
   allGenresOption.textContent = "All Genres";
   genreFilter.appendChild(allGenresOption);
 
   const genres = new Set(); 
+
+  // Extract genres from allBooks
   allBooks.forEach((book) => {
     if (book.subjects && book.subjects.length > 0) {
       book.subjects.forEach((subject) => genres.add(subject));
@@ -268,18 +281,19 @@ function filterByGenre() {
     url.searchParams.delete('genre'); 
   }
   window.history.pushState({}, '', url); 
-  // Filter books by the selected genre
   if (selectedGenre) {
     filteredBooks = allBooks.filter(book => 
       (book.subjects && book.subjects.includes(selectedGenre)) || 
       (book.bookshelves && book.bookshelves.includes(selectedGenre))
     );
   } else {
-    filteredBooks = allBooks;
+    filteredBooks = allBooks; 
   }
   displayBooks(filteredBooks); 
   createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage); 
 }
+
+
 
 // Create pagination
 function createPagination(totalPages, currentPage) {
@@ -323,9 +337,11 @@ function createPagination(totalPages, currentPage) {
 function goToPage(page) {
   if (page < 1 || page > totalPages) return;  
   currentPage = page;
+
   const url = new URL(window.location);
   url.searchParams.set('page', currentPage);
   window.history.pushState({}, '', url); 
+
   fetchBooksByPage(currentPage);
 }
 
@@ -333,6 +349,7 @@ function goToPage(page) {
 function toggleWishlist(bookId) {
   const book = allBooks.find((b) => b.id === bookId);
   if (!book) return;
+
   const isBookInWishlist = wishlist.some((b) => b.id === bookId);
   if (isBookInWishlist) {
     wishlist = wishlist.filter((b) => b.id !== bookId);
@@ -341,16 +358,17 @@ function toggleWishlist(bookId) {
     wishlist.push(book);
     showToast(`Added book to your wishlist!`, "green-600");
   }
+  
   localStorage.setItem("wishlist", JSON.stringify(wishlist));
   displayBooks(filteredBooks); 
 }
 
 function showToast(message, color) {
-  // Remove existing toast if present
   const existingToast = document.querySelector(".toast");
   if (existingToast) {
     existingToast.remove();
   }
+
   // Create the toast element
   const toast = document.createElement("div");
   toast.classList.add(
@@ -400,6 +418,7 @@ function showToast(message, color) {
   });
 
   toast.appendChild(closeButton);
+
   document.body.appendChild(toast);
 
   // Trigger the toast animation
@@ -407,6 +426,7 @@ function showToast(message, color) {
     toast.classList.remove("opacity-0", "translate-y-[-20px]"); 
     toast.classList.add("opacity-100", "translate-y-0");
   });
+
   // Automatically remove the toast after a timeout
   setTimeout(() => {
     if (toast.parentNode) {
