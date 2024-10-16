@@ -17,12 +17,18 @@ The Book Library Project is a web application that allows users to browse, searc
 ### Technologies Used
 - HTML
 - CSS
+- Tailwind CSS
 - JavaScript
 - Gutendex API
 
 ### Installation
-- Clone the repository:
-  **git clone https://github.com/yourusername/book-library-project.git**
-  **cd book-library-project**
+- **Clone the repository:**
+- git clone https://github.com/yourusername/book-library-project.git
+- cd book-library-project
 
 ### Usage
+# Open the application in a web browser.
+# Use the search bar to search for books by title.
+# Select a genre from the dropdown menu to filter books by genre.
+# Browse the list of books and click on any book to view its details.
+# Click the heart icon to add or remove a book from your wishlist.
