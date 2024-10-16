@@ -22,7 +22,7 @@ The Book Library Project is a web application that allows users to browse, searc
 - Gutendex API
 
 ### Installation
-- **Clone the repository:**
+**Clone the repository:**
 - git clone https://github.com/yourusername/book-library-project.git
 - cd book-library-project
 
