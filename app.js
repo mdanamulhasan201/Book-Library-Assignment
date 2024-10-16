@@ -1,10 +1,9 @@
 let allBooks = [];
 let filteredBooks = [];
 let currentPage = 1;
-const booksPerPage = 10; 
 let totalBooks = 0;
+let totalPages = 0;  // Add this to store the total pages from the backend
 let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-const apiBooksPerPage = 32; // API default books per page
 let searchTimeout;
 
 // On DOM load, fetch the books
@@ -13,54 +12,70 @@ document.addEventListener("DOMContentLoaded", () => {
   const page = parseInt(urlParams.get('page')) || 1; 
   currentPage = page;
 
-  fetchAllBooks();
+  fetchBooksByPage(currentPage);
 });
 
-// Function to fetch books from multiple pages of the API
-function fetchAllBooks(page = 1) {
-  document.getElementById("loading-spinner").classList.remove("hidden");
+// Function to fetch books for the specific page from the API
+// Function to fetch books for the specific page from the API
+function fetchBooksByPage(page = 1) {
+  return new Promise((resolve, reject) => {
+    document.getElementById("loading-spinner").classList.remove("hidden");
 
-  // Set how many pages you want to fetch (based on totalBooks or just an assumption)
-  const totalPagesToFetch = 5; 
+    fetch(`https://gutendex.com/books?page=${page}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then(data => {
+        allBooks = data.results;  // Store books from the current page
+        totalBooks = data.count;  // Total books count
+        totalPages = Math.ceil(totalBooks / data.results.length);  // Total pages
 
-  const fetchPromises = [];
-  for (let i = 1; i <= totalPagesToFetch; i++) {
-    fetchPromises.push(fetch(`https://gutendex.com/books?page=${i}`).then(response => response.json()));
-  }
+        // Apply genre filtering, if any
+        const selectedGenre = document.getElementById("genre-filter").value;
+        if (selectedGenre) {
+          filteredBooks = allBooks.filter(book => 
+            (book.subjects && book.subjects.includes(selectedGenre)) || 
+            (book.bookshelves && book.bookshelves.includes(selectedGenre))
+          );
+        } else {
+          filteredBooks = allBooks; // No filter selected, show all books
+        }
 
-  Promise.all(fetchPromises)
-    .then((responses) => {
-      allBooks = responses.reduce((acc, data) => acc.concat(data.results), []);
-      totalBooks = responses[0].count; 
-
-      filteredBooks = allBooks;
-      displayBooks(filteredBooks);
-      createPagination(Math.ceil(totalBooks / booksPerPage), currentPage);
-      populateGenres();
-    })
-    .catch((error) => console.error("Error fetching books:", error))
-    .finally(() => {
-      document.getElementById("loading-spinner").classList.add("hidden");
-    });
+        displayBooks(filteredBooks);  // Display filtered or unfiltered books
+        createPagination(totalPages, currentPage); // Create pagination
+        populateGenres(); // Populate the dropdown genres
+        resolve();
+      })
+      .catch(error => {
+        console.error("Error fetching books:", error);
+        alert("Failed to fetch books. Please try again later.");
+        reject(error);
+      })
+      .finally(() => {
+        document.getElementById("loading-spinner").classList.add("hidden");
+      });
+  });
 }
+
 
 // Display books on the page
 function displayBooks(books) {
   const bookContainer = document.getElementById("book-list");
   bookContainer.innerHTML = "";
-  const startIndex = (currentPage - 1) * booksPerPage;
-  const endIndex = startIndex + booksPerPage;
-  const paginatedBooks = books.slice(startIndex, endIndex);
-  if (paginatedBooks.length === 0) {
+
+  if (books.length === 0) {
     bookContainer.innerHTML = `<div class="col-span-full text-center text-gray-500">No books found</div>`;
     return;
   }
-  paginatedBooks.forEach((book) => {
+
+  books.forEach((book) => {
     const bookItem = document.createElement("div");
     bookItem.classList.add("book-item");
     const isWishlisted = wishlist.some((b) => b.id === book.id);
 
-   
     // Extract genre from subjects or bookshelves
     let genre = "Unknown"; 
     if (book.subjects && book.subjects.length > 0) {
@@ -71,18 +86,18 @@ function displayBooks(books) {
 
     // Extract and truncate title
     const fullTitle = book.title;
-    const truncatedTitle = fullTitle.length > 80 ? `${fullTitle.substring(0, 80)}...` : fullTitle;
+    const truncatedTitle = fullTitle.length > 60 ? `${fullTitle.substring(0, 60)}...` : fullTitle;
 
     bookItem.innerHTML = `
       <img src="${book.formats["image/jpeg"] || "default_cover.jpg"}" alt="${book.title}" class="book-cover mb-4"/>
-      <h3 class="text-md text-center font-bold mb-1 mt-2">
+      <h3 class="text-md text-center font-bold mt-2">
         <span class="full-title hidden">${fullTitle}</span>
         <span class="truncated-title">${truncatedTitle}</span>
-        ${fullTitle.length > 100 ? `<button class="text-blue-500 underline read-more" onclick="toggleTitle(this)">Read More</button>` : ''}
+        ${fullTitle.length > 60 ? `<button class="text-blue-500 underline read-more" onclick="toggleTitle(this)">Read More</button>` : ''}
       </h3>
-      <p class="text-gray-600 text-center mb-1">Author: ${book.authors.length ? book.authors[0].name : "Unknown"}</p>
-     <p class="text-gray-600 text-center mb-1">Genre: ${genre}</p>
-      <div class="flex justify-between mt-4">
+      <p class="text-gray-500 text-center mt-1"> <span class='font-bold text-sm'>Author:</span> ${book.authors.length ? book.authors[0].name : "Unknown"}</p>
+      <p class="text-gray-500 text-center mb-5"><span class='font-bold text-sm'>Genre:</span> ${genre}</p>
+      <div class="flex justify-between items-center mb-5">
         <p class="text-gray-600 book-card-id">ID: ${book.id}</p>
         <button class="wishlist-btn ${isWishlisted ? "active" : ""}" data-id="${book.id}" onclick="toggleWishlist(${book.id})">
           <i class="${isWishlisted ? "fas fa-heart" : "far fa-heart"}"></i>
@@ -111,7 +126,6 @@ function toggleTitle(button) {
   }
 }
 
-
 // Real-time search for books by title
 function filterBooks() {
   const searchQuery = document.getElementById("search-bar").value.trim().toLowerCase();
@@ -126,11 +140,11 @@ function filterBooks() {
   window.history.pushState({}, '', url); 
 
   if (searchQuery === "") {
-    filteredBooks = allBooks;
+    filteredBooks = allBooks; // Reset to all books if search is empty
   } else {
-    filteredBooks = allBooks.filter((book) =>
-      book.title.toLowerCase().includes(searchQuery)
-    );
+    // Fetch all books that match the search query from the API
+    searchBooks(searchQuery); // Call the search function directly
+    return; // Prevent further execution of this function
   }
 
   currentPage = 1; 
@@ -138,38 +152,66 @@ function filterBooks() {
   createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage);
 }
 
-// API-based search with debounce mechanism
+
+
 function searchBooks() {
   const searchQuery = document.getElementById("search-bar").value.trim();
 
+  // Clear any existing timeout to prevent multiple fetch calls
   if (searchTimeout) clearTimeout(searchTimeout);
 
+  // Set a timeout to wait for the user to finish typing
   searchTimeout = setTimeout(() => {
-    const url = new URL(window.location);
-    if (searchQuery === "") {
-      filteredBooks = allBooks; 
-      url.searchParams.delete('search'); 
+    // Show loading indication
+    document.getElementById("loading-spinner").classList.remove("hidden");
+
+    // Check if the search query length is less than 3
+    if (searchQuery.length < 3) {
+      // If less than 3 letters, reset to all books and hide loading
+      filteredBooks = allBooks; // Reset to all books
+      currentPage = 1; 
       displayBooks(filteredBooks);
-      createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage);
-      window.history.pushState({}, '', url); 
-      return;
+      createPagination(totalPages, currentPage);  // Use totalPages instead of booksPerPage
+      document.getElementById("loading-spinner").classList.add("hidden"); // Hide loading
+      return; // Exit the function
     }
 
-    url.searchParams.set('search', searchQuery); 
-    window.history.pushState({}, '', url); 
+    // Perform the search
     fetch(`https://gutendex.com/books?search=${encodeURIComponent(searchQuery)}`)
-      .then(response => response.json())
+      .then(response => {
+        // Check for response validity
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then(data => {
-        filteredBooks = data.results;
-        totalBooks = data.count;
+        // Check if results are empty
+        if (data.results.length === 0) {
+          filteredBooks = []; // No books found
+          alert("No books found for the given search term.");
+        } else {
+          filteredBooks = data.results; // Update with search results
+          totalBooks = data.count;
+          totalPages = Math.ceil(totalBooks / data.results.length); // Calculate total pages
+        }
         currentPage = 1; 
 
         displayBooks(filteredBooks);
-        createPagination(Math.ceil(totalBooks / booksPerPage), currentPage);
+        createPagination(totalPages, currentPage); // Use totalPages for pagination
       })
-      .catch(error => console.error("Error fetching search results:", error));
-  }, 300); // Debounce time in milliseconds
+      .catch(error => {
+        console.error("Error fetching search results:", error);
+        alert("Failed to fetch books. Please try again later.");
+      })
+      .finally(() => {
+        // Hide loading indication once the search is complete
+        document.getElementById("loading-spinner").classList.add("hidden");
+      });
+  }, 500); // Wait for 500 milliseconds of inactivity before searching
 }
+
+
 
 // On DOM load, fetch the books and handle any search parameters in the URL
 document.addEventListener("DOMContentLoaded", () => {
@@ -180,18 +222,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (searchQuery) {
     document.getElementById("search-bar").value = searchQuery; 
-    filterBooks(); 
+    searchBooks(searchQuery); // Directly search books
   } else {
-    fetchAllBooks(); 
+    fetchBooksByPage(currentPage); // Fetch the default books
   }
 });
+// Clear the search input and refresh the book list
+function clearSearch() {
+  document.getElementById("search-bar").value = ""; // Clear the input
+
+  // Show loading spinner while fetching books
+  document.getElementById("loading-spinner").classList.remove("hidden");
+
+  // Fetch all books
+  fetchBooksByPage(1) // Fetch first page of all books
+    .then(() => {
+      filteredBooks = allBooks; // Reset filtered books to all books
+      currentPage = 1; // Reset to the first page
+      displayBooks(filteredBooks);
+
+      const totalPages = Math.ceil(totalBooks / filteredBooks.length); // Calculate total pages
+      createPagination(totalPages, currentPage); // Update pagination
+    })
+    .catch(error => console.error("Error fetching all books:", error))
+    .finally(() => {
+      // Hide loading spinner once the books are loaded
+      document.getElementById("loading-spinner").classList.add("hidden");
+    });
+
+  // Update the URL to remove the search parameter
+  const url = new URL(window.location);
+  url.searchParams.delete('search'); 
+  window.history.pushState({}, '', url); // Update the URL without reloading the page
+}
+
 
 
 // Populate genres in the dropdown dynamically
 function populateGenres() {
   const genreFilter = document.getElementById("genre-filter");
+  genreFilter.innerHTML = ""; // Clear existing options
+
+  // Add "All Genres" option
+  const allGenresOption = document.createElement("option");
+  allGenresOption.value = ""; // Empty value for all genres
+  allGenresOption.textContent = "All Genres";
+  genreFilter.appendChild(allGenresOption);
+
   const genres = new Set(); 
 
+  // Extract genres from allBooks
   allBooks.forEach((book) => {
     if (book.subjects && book.subjects.length > 0) {
       book.subjects.forEach((subject) => genres.add(subject));
@@ -200,6 +280,7 @@ function populateGenres() {
     }
   });
 
+  // Add options to the genre filter dropdown
   genres.forEach((genre) => {
     const option = document.createElement("option");
     option.value = genre;
@@ -209,31 +290,48 @@ function populateGenres() {
 }
 
 // Filter by genre
+// Filter by genre when the user selects a genre
 function filterByGenre() {
   const selectedGenre = document.getElementById("genre-filter").value;
-  filteredBooks = selectedGenre
-    ? allBooks.filter((book) => 
-        (book.subjects && book.subjects.includes(selectedGenre)) || 
-        (book.bookshelves && book.bookshelves.includes(selectedGenre))
-      )
-    : allBooks;
 
-  currentPage = 1;
-  displayBooks(filteredBooks);
-  createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage);
+  // Update the URL with the genre filter parameter
+  const url = new URL(window.location);
+  if (selectedGenre) {
+    url.searchParams.set('genre', selectedGenre); 
+  } else {
+    url.searchParams.delete('genre'); // Remove filter if none is selected
+  }
+  window.history.pushState({}, '', url); // Update the URL without reloading the page
+
+  // Filter books by the selected genre
+  if (selectedGenre) {
+    filteredBooks = allBooks.filter(book => 
+      (book.subjects && book.subjects.includes(selectedGenre)) || 
+      (book.bookshelves && book.bookshelves.includes(selectedGenre))
+    );
+  } else {
+    filteredBooks = allBooks; // Show all books if no genre is selected
+  }
+
+  displayBooks(filteredBooks); // Display the filtered or all books
+  createPagination(Math.ceil(filteredBooks.length / booksPerPage), currentPage); // Update pagination
 }
+
+
 
 // Create pagination
 function createPagination(totalPages, currentPage) {
   const paginationContainer = document.getElementById("pagination");
   paginationContainer.innerHTML = "";
 
+  // Previous Button
   const prevButton = document.createElement("button");
   prevButton.innerHTML = "Previous";
   prevButton.disabled = currentPage === 1;
   prevButton.addEventListener("click", () => goToPage(currentPage - 1));
   paginationContainer.appendChild(prevButton);
 
+  // Page buttons
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       const pageButton = document.createElement("button");
@@ -251,6 +349,7 @@ function createPagination(totalPages, currentPage) {
     }
   }
 
+  // Next Button
   const nextButton = document.createElement("button");
   nextButton.innerHTML = "Next";
   nextButton.disabled = currentPage === totalPages;
@@ -260,14 +359,14 @@ function createPagination(totalPages, currentPage) {
 
 // Go to a specific page
 function goToPage(page) {
-  if (page < 1 || page > Math.ceil(totalBooks / booksPerPage)) return;
+  if (page < 1 || page > totalPages) return;  // Ensure page is within valid range
   currentPage = page;
 
   const url = new URL(window.location);
   url.searchParams.set('page', currentPage);
   window.history.pushState({}, '', url); 
 
-  fetchAllBooks();
+  fetchBooksByPage(currentPage);
 }
 
 // Toggle wishlist
@@ -278,21 +377,90 @@ function toggleWishlist(bookId) {
   const isBookInWishlist = wishlist.some((b) => b.id === bookId);
   if (isBookInWishlist) {
     wishlist = wishlist.filter((b) => b.id !== bookId);
-    showToast(`Removed "${book.title}" from your wishlist!`, "red-600");
+    showToast(`Removed book from your wishlist!`, "red-600");
   } else {
     wishlist.push(book);
-    showToast(`Added "${book.title}" to your wishlist!`, "green-600");
+    showToast(`Added book to your wishlist!`, "green-600");
   }
   
   localStorage.setItem("wishlist", JSON.stringify(wishlist));
-  displayBooks(filteredBooks); // Refresh the books display
+  displayBooks(filteredBooks); 
 }
 
-// Toast notifications for wishlist updates
 function showToast(message, color) {
+  // Remove existing toast if present
+  const existingToast = document.querySelector(".toast");
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  // Create the toast element
   const toast = document.createElement("div");
-  toast.classList.add("toast", `bg-${color}`);
-  toast.innerText = message;
+  toast.classList.add(
+    "toast", 
+    "fixed",
+    "top-4",
+    "right-4",
+    "bg-white",
+    `border-l-4`,
+    `border-${color}`,
+    "shadow-lg",
+    "rounded-lg",
+    "p-4",
+    "text-gray-800",
+    "transition-all", 
+    "duration-300", 
+    "ease-in-out", 
+    "opacity-0",
+    "transform",
+    "translate-y-[-20px]", 
+    "z-50" 
+  );
+
+  // Create the message element
+  const messageElement = document.createElement("span");
+  messageElement.innerText = message;
+  toast.appendChild(messageElement);
+
+  // Create the close button
+  const closeButton = document.createElement("button");
+  closeButton.innerHTML = '&times;'; 
+  closeButton.classList.add(
+    "ml-4",
+    "text-gray-500",
+    "hover:text-gray-700",
+    "focus:outline-none",
+    "text-xl"
+  );
+
+  // Close button event
+  closeButton.addEventListener("click", () => {
+    toast.classList.remove("opacity-100");
+    toast.classList.add("opacity-0", "translate-y-2"); 
+    setTimeout(() => {
+      toast.remove(); 
+    }, 300); 
+  });
+
+  toast.appendChild(closeButton);
+
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+
+  // Trigger the toast animation
+  requestAnimationFrame(() => {
+    toast.classList.remove("opacity-0", "translate-y-[-20px]"); 
+    toast.classList.add("opacity-100", "translate-y-0");
+  });
+
+  // Automatically remove the toast after a timeout
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.classList.remove("opacity-100");
+      toast.classList.add("opacity-0", "translate-y-2"); 
+      setTimeout(() => {
+        toast.remove(); 
+      }, 300); 
+    }
+  }, 3000);
 }
+

@@ -27,7 +27,7 @@ function displayWishlist(showSpinner = true) {
             }" alt="${book.title}" class="w-24 h-32 object-cover mx-auto"/>
           </td>
           <td class="px-4 py-2 text-center">${book.id}</td>
-          <td class="px-4 py-2 text-center whitespace-nowrap">${book.title}</td>
+          <td class="px-4 py-2 text-center ">${book.title}</td>
           <td class="px-4 py-2 text-center whitespace-nowrap">${
             book.authors.length ? book.authors[0].name : "Unknown"
           }</td>
@@ -68,5 +68,5 @@ function removeFromWishlist(bookId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  displayWishlist(); 
+  displayWishlist(); // Initial load with spinner
 });
