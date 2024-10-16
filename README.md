@@ -27,8 +27,10 @@ The Book Library Project is a web application that allows users to browse, searc
 - cd book-library-project
 
 ### Usage
-- Open the application in a web browser.
-- Use the search bar to search for books by title.
-- Select a genre from the dropdown menu to filter books by genre.
-- Browse the list of books and click on any book to view its details.
-- Click the heart icon to add or remove a book from your wishlist.
+1. **Open the application** in a web browser.
+2. **Use the search bar** to search for books by title.
+3. **Select a genre** from the dropdown menu to filter books by genre.
+4. **Click the heart icon** to add or remove a book from your wishlist.
+5. **Go to the wishlist** page to view all the books you have added.
+6. **Browse the list of books** in the wishlist and click the delete button next to any book to remove it from the wishlist.
+
